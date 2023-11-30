@@ -1,0 +1,544 @@
+esphome:
+  name: solis-rai-3k-48es-5g
+  friendly_name: solis-RAI-3K-48ES-5G
+
+esp8266:
+  #board: esp01_1m
+  board: d1_mini
+
+# Enable logging
+logger:
+  level: INFO 
+  baud_rate: 0
+
+uart:
+  id: mod_bus
+  tx_pin: TX
+  rx_pin: RX
+  baud_rate: 9600
+  stop_bits: 1
+
+modbus:
+  flow_control_pin: D1
+  id: modbus1
+  send_wait_time: 200ms
+
+modbus_controller:
+  - id: solis
+    ## the Modbus device addr
+    address: 0x1
+    modbus_id: modbus1
+    setup_priority: -10
+    command_throttle: 300ms
+    update_interval: 30s
+
+sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 60s
+
+### Status Sensors
+
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    id: inverter_tempterature
+    name: "Inverter Temperature"
+    address: 33093
+    unit_of_measurement: "°C" 
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    name: "Raw Inverter Status"
+    id: status_general_raw
+    register_type: read
+    value_type: U_WORD
+    address: 33095
+    disabled_by_default: True
+
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    name: "Raw Operation Status"
+    id: status_operation_raw
+    register_type: read
+    value_type: U_WORD
+    address: 33121
+    disabled_by_default: True
+
+#### Inverter Time
+#  - platform: modbus_controller
+#    modbus_controller_id: solis
+#    name: "Inverter Time Year"
+#    id: status_time_yy
+#    register_type: read
+#    value_type: U_WORD
+#    address: 33022
+#    register_count: 6
+
+#  - platform: modbus_controller
+#    modbus_controller_id: solis
+#    name: "Inverter Time Month"
+#    id: status_time_MM
+#    register_type: read
+#    value_type: U_WORD
+#    address: 33023
+    
+#  - platform: modbus_controller
+#    modbus_controller_id: solis
+#    name: "Inverter Time Day"
+#    id: status_time_dd
+#    register_type: read
+#    value_type: U_WORD
+#    address: 33024
+
+#  - platform: modbus_controller
+#    modbus_controller_id: solis
+#    name: "Inverter Time Hour"
+#    id: status_time_hh
+#    register_type: read
+#    value_type: U_WORD
+#    address: 33025
+
+#  - platform: modbus_controller
+#    modbus_controller_id: solis
+#    name: "Inverter Time Minute"
+#    id: status_time_mm
+#    register_type: read
+#    value_type: U_WORD
+#    address: 33026
+
+#  - platform: modbus_controller
+#    modbus_controller_id: solis
+#    name: "Inverter Time Second"
+#    id: status_time_ss
+#    register_type: read
+#    value_type: U_WORD
+#    address: 33027
+
+
+#### Power Measurement Sensors
+
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    id: inverter_current
+    name: "Inverter Current"
+    address: 33076
+    unit_of_measurement: "A" 
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    id: meter_active_power
+    name: "Meter Active Power"
+    address: 33130
+    unit_of_measurement: "W" 
+    register_type: read
+    value_type: S_DWORD
+
+#### Battery Information Sensors
+
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    id: battery_soc
+    name: "Battery SOC"
+    address: 33139
+    unit_of_measurement: "%" 
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 1
+
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    id: battery_voltage
+    name: "Battery Voltage"
+    address: 33141 
+    unit_of_measurement: "V" 
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    id: battery_current
+    name: "Battery Current"
+    address: 33134 
+    unit_of_measurement: "A" 
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    id: battery_power
+    name: "Battery Power"
+    address: 33149 
+    unit_of_measurement: "W" 
+    register_type: read
+    value_type: S_DWORD
+
+
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    id: battery_charge_today
+    name: "Battery Charge Today"
+    address: 33163 
+    unit_of_measurement: "kWh"
+    state_class: total_increasing
+    device_class: energy 
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    id: battery_discharge_today
+    name: "Battery Discharge Today"
+    address: 33167 
+    unit_of_measurement: "kWh"
+    state_class: total_increasing
+    device_class: energy 
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
+### Inverter Switches
+
+select:
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    name: "Power On / Off Switch"
+    id: power_switch
+    value_type: U_WORD
+    address: 43007
+    optionsmap:
+      "On": 190
+      "Off": 222
+
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    name: "Energy Storage Control Switch Selector"
+    id: esc_switch_select
+    address: 43110
+    value_type: U_WORD
+    optionsmap:
+        "Feed In Priority Mode - Timer Off" : 0
+        "Self Use Mode - Timer Off"         : 1
+        "Feed In Priority Mode - Timer On"  : 2
+        "Self Use Mode - Timer On"          : 3
+        "Off Grid (FI) - Timer Off"         : 4
+        "Off Grid (SU) - Timer Off"         : 5
+        "Off Grid (FI) - Timer On"          : 6
+        "Off Grid (SU) - Timer On"          : 7
+
+#### Inverter Information Text Sensors
+
+text_sensor:
+
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    name: "Inverter Status"
+    id: status_general
+    bitmask: 0
+    register_type: read
+    address: 33095
+    raw_encode: HEXBYTES
+    lambda: |-
+      uint16_t value = modbus_controller::word_from_hex_str(x, 0);
+      switch (value) {
+        case 0: return std::string("Waiting");
+        case 1: return std::string("Open Loop");
+        case 2: return std::string("SoftRun");
+        case 3: return std::string("Normal/Generating");
+        case 4100: return std::string("Off-Grid");
+        case 4112: return std::string("Grid overvoltage");
+        case 4113: return std::string("Grid undervoltage");
+        case 4114: return std::string("Grid overfrequency");
+        case 4115: return std::string("Grid underfrequency");
+        case 4116: return std::string("Grid impedance is too large");
+        case 4117: return std::string("No Grid");
+        case 4118: return std::string("Grid imbalance");
+        case 4119: return std::string("Grid frequency jitter");
+        case 4120: return std::string("Grid overcurrent");
+        case 4121: return std::string("Grid current tracking fault");
+        case 4122: return std::string("DC overvoltag");
+        case 4129: return std::string("DC bus overvoltage");
+        case 4130: return std::string("DC busbar uneven voltage");
+        case 4131: return std::string("DC bus undervoltage");
+        case 4132: return std::string("DC busbar uneven voltage 2");
+        case 4133: return std::string("DC A way overcurrent");
+        case 4134: return std::string("DC B path overcurrent");
+        case 4135: return std::string("DC input disturbance");
+        case 4144: return std::string("Grid disturbance");
+        case 4145: return std::string("DSP initialization protection");
+        case 4146: return std::string("Overtemperature protection");
+        case 4147: return std::string("PV insulation fault");
+        case 4148: return std::string("Leakage current protection");
+        case 4149: return std::string("Relay detection protection");
+        case 4150: return std::string("DSP_B protection");
+        case 4151: return std::string("DC component is too large");
+        case 4152: return std::string("12V undervoltage protection");
+        case 4153: return std::string("Leakage current self-test protection");
+        case 4154: return std::string("Under temperature protection");
+        case 4160: return std::string("Arc self-test protection");
+        case 4161: return std::string("Arc protection");
+        case 4162: return std::string("DSP on-chip SRAM exception");
+        case 4163: return std::string("DSP on-chip FLASH exception");
+        case 4164: return std::string("DSP on-chip PC pointer is abnormal");
+        case 4165: return std::string("DSP key register exception");
+        case 4166: return std::string("Grid disturbance 02");
+        case 4167: return std::string("Grid current sampling abnormality ");
+        case 4168: return std::string("IGBT overcurrent");
+        case 4176: return std::string("Network side current transient overcurrent");
+        case 4177: return std::string("Battery overvoltage hardware failure");
+        case 4178: return std::string("LLC hardware overcurrent");
+        case 4179: return std::string("Battery overvoltage detection");
+        case 4180: return std::string("Battery undervoltage detection");
+        case 4181: return std::string("Battery not connected");
+        case 4182: return std::string("Bypass overvoltage fault");
+        case 4183: return std::string("Bypass overload fault Over-Load");
+        case 8210: return std::string("No Battery");
+        case 8213: return std::string("Battery Alarm");
+        default: return std::string("Unknown Status");
+      }
+      return x;
+
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    name: "Energy Storage Control Switch"
+    id: esc_switch
+    bitmask: 0
+    register_type: read
+    address: 33132
+    raw_encode: HEXBYTES
+    lambda: |-
+      uint16_t value = modbus_controller::word_from_hex_str(x, 0);
+      switch (value) {
+        case 0: return std::string("Feed In Priority Mode - Timer Off");
+        case 1: return std::string("Self Use Mode - Timer Off");
+        case 2: return std::string("Feed In Priority Mode - Timer On");
+        case 3: return std::string("Self Use Mode - Timer On");
+        case 4: return std::string("Off Grid (FI) - Timer Off");
+        case 5: return std::string("Off Grid (SU) - Timer Off");
+        case 6: return std::string("Off Grid (FI) - Timer On");
+        case 7: return std::string("Off Grid (SU) - Timer On");
+        default: return std::string("Other");
+      }
+      return x;
+
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    name: "Operational Status"
+    id: status_operation
+    register_type: read
+    address: 33121
+    bitmask: 0
+    raw_encode: HEXBYTES
+    lambda: |-
+      uint16_t value = modbus_controller::word_from_hex_str(x, 0);
+      switch (value) {
+        case 0: return std::string("Unknown");
+        case 1: return std::string("Normal Operation");
+        case 2: return std::string("Inital Standby");
+        case 4: return std::string("Control Shutdown");
+        case 8: return std::string("Downtime");
+        case 16: return std::string("Standby");
+        default: return std::string("Error");
+      }
+      return x;
+      
+####Battery Information
+
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    name: "Battery Current Direction"
+    id: battery_current_direction
+    bitmask: 0
+    register_type: read
+    address: 33135
+    raw_encode: HEXBYTES
+    lambda: |-
+      uint16_t value = modbus_controller::word_from_hex_str(x, 0);
+      switch (value) {
+        case 0: return std::string("Charging");
+        case 1: return std::string("Discharging");
+        default: return std::string("Unknown");
+      }
+      return x;
+
+  #### Charge / Discharge Limits and Timing 
+number:
+
+# These Don't appear to work with the RAI (Or I haven't found the right option combination)
+#  - platform: modbus_controller
+#    modbus_controller_id: solis
+#    id: Overall_Charge_Current_Limit
+#    name: "Overall Charge Current Limit"
+#    address: 43117
+#    value_type: U_WORD
+#    min_value: 0
+#    max_value: 60
+#    step: 1
+#    unit_of_measurement: "A"
+#    lambda: |-
+#      return x / 10;
+#    write_lambda: |-
+#      return x * 10;
+
+#  - platform: modbus_controller
+#    modbus_controller_id: solis
+#    id: Overall_Discharge_Current_Limit
+#    name: "Overall Discharge Current Limit"
+#    address: 43118
+#    value_type: U_WORD
+#    min_value: 0
+#    max_value: 60
+#    step: 1
+#    unit_of_measurement: "A"
+#    lambda: |-
+#      return x / 10;
+#    write_lambda: |-
+#      return x * 10;
+
+#### Charge Timer & Timer Current Limits
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    id: Charge_Timer_Current_Limit
+    name: "Charge Timer Current Limit"
+    address: 43141
+    value_type: U_WORD
+    min_value: 0
+    max_value: 60
+    step: 1
+    unit_of_measurement: "A"
+    lambda: |-
+      return x / 10;
+    write_lambda: |-
+      return x * 10;
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    id: Discharge_Timer_Current_Limit
+    name: "Discharge Timer Current Limit"
+    address: 43142
+    value_type: U_WORD
+    min_value: 0
+    max_value: 60
+    step: 1
+    unit_of_measurement: "A"
+    lambda: |-
+      return x / 10;
+    write_lambda: |-
+      return x * 10;
+
+    #### Charge Timer 1 
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    id: Charge_Timer_1_Start_Hours
+    name: "Charge Timer 1 Start Hours"
+    address: 43143
+    value_type: U_WORD
+    min_value: 0
+    max_value: 23
+    step: 1
+    unit_of_measurement: "Hours"
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    id: Charge_Timer_1_Start_Minutes
+    name: "Charge Timer 1 Start Minutes"
+    address: 43144
+    value_type: U_WORD
+    min_value: 0
+    max_value: 59
+    step: 1
+    unit_of_measurement: "Minutes"
+
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    id: Charge_Timer_1_Stop_Hours
+    name: "Charge Timer 1 Stop Hours"
+    address: 43145
+    value_type: U_WORD
+    min_value: 0
+    max_value: 23
+    step: 1
+    unit_of_measurement: "Hours"
+  - platform: modbus_controller
+    modbus_controller_id: solis
+    id: Charge_Timer_1_Stop_Minutes
+    name: "Charge Timer 1 Stop Minutes"
+    address: 43146
+    value_type: U_WORD
+    min_value: 0
+    max_value: 59
+    step: 1
+    unit_of_measurement: "Minutes"
+
+#### Getting the time from HASSIO and presenting a button to sync it. 
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+button:
+  - platform: template
+    name: "Set RTC to HASSIO Clock"
+    on_press:
+      then:
+        - lambda: |-
+            // get local time and sync to controller
+            time_t now = ::time(nullptr);
+            struct tm *time_info = ::localtime(&now);
+            int seconds = time_info->tm_sec;
+            int minutes = time_info->tm_min;
+            int hour = time_info->tm_hour;
+            int day = time_info->tm_mday;
+            int month = time_info->tm_mon + 1;
+            int year = time_info->tm_year % 100;
+            esphome::modbus_controller::ModbusController *controller = id(solis);
+            // if there is no internet connection localtime returns year 70
+            if (year != 70) {
+              // create the payload
+              std::vector<uint16_t> rtc_data = {uint16_t(year), uint16_t(month), uint16_t(day), uint16_t(hour), uint16_t(minutes), uint16_t(seconds)};
+              // Create a ModBUS command item with the time information as the payload
+              esphome::modbus_controller::ModbusCommandItem set_rtc_command =
+                  esphome::modbus_controller::ModbusCommandItem::create_write_multiple_command(solis, 43000, 6, rtc_data);
+              // Submit the command to the send queue
+              solis->queue_command(set_rtc_command);
+              ESP_LOGI("ModbusLambda", "Solis RTC set to %02d:%02d:%02d %02d.%02d.%04d", hour, minutes, seconds, day, month, year + 2000);
+            }
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "JDxJcDdvUwf7MwBFrPg5OK629tjlE5IOn85yq+qPzS4="
+
+ota:
+  password: "dc655b156e8e0b0ccdcb919e55854742"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Solis-Rai-3K-48Es-5G"
+    password: "2gdTm6Ih62BJ"
+
+captive_portal:
+
+web_server:
+  port: 80
