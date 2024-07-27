@@ -6,7 +6,7 @@
 They are designed for my hardware solution which can be found at
 
 [https://store.eplop.co.uk/products/solis-rs485-to-wifi-adaptor
-](https://)
+](https://store.eplop.co.uk/products/solis-rs485-to-wifi-adaptor)
 
 This includes a custom PCB which then uses a Wemos D1 mini board and then combined with a custom made cable which allows the board to get both the data from the inverter but also be powered from the inverter itself so no external power is required.
 
